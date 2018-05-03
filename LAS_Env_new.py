@@ -145,13 +145,11 @@ class LivingArchitectureEnv(gym.Env):
         action_smas = action[:self.smas_num]
         action_lights = action[self.smas_num:]
         action_lights = action_lights.astype(int)
-        # Serial taking action
+        # taking action
         start = time.time()
-        self._set_all_joint_position(action_smas)#self._set_joint_position(action_smas) #
-        print("_set_all_joint_position running time: {}".format(time.time()-start))
-        start = time.time()
+        self._set_all_joint_position(action_smas)
         self._set_all_light_state(action_lights)
-        print("Serial action running time: {}".format(time.time()-start))
+        print("Action running time: {}".format(time.time()-start))
         
         self._self_observe()
         self._reward()
