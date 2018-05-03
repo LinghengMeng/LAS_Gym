@@ -150,10 +150,16 @@ class LivingArchitectureEnv(gym.Env):
         self._set_all_joint_position(action_smas)
         self._set_all_light_state(action_lights)
         print("Action running time: {}".format(time.time()-start))
-        
+        # observe
+        start = time.time()
         self._self_observe()
+        print("Observation running time: {}".format(time.time()-start))
+        # caculate reward
         self._reward()
-        return self.observation, self.reward, False, [] 
+        
+        done = False
+        
+        return self.observation, self.reward, done, [] 
     
     def _set_all_joint_position(self, targetPosition):
         jointNum = len(self.jointHandles)
@@ -190,17 +196,10 @@ class LivingArchitectureEnv(gym.Env):
         """
         
         """
-        
-        start = time.time()
         proxStates, proxPosition = self._get_all_prox_data()
-        print("_get_all_prox_data running time: {}".format(time.time()-start))
-        
-        start = time.time()
         lightStates, lightDiffsePart, lightSpecularPart = self._get_all_light_data()
-        print("_get_all_light_data running time: {}".format(time.time()-start))
-
         self.observation = np.array([proxStates,lightStates]).flatten()
-        return self.observation#, proxData, lightData
+        return self.observation
     
     def _get_all_prox_data(self):
         """
