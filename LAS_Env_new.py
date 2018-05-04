@@ -149,17 +149,17 @@ class LivingArchitectureEnv(gym.Env):
         action_lights = action_lights.astype(int)
         
         # taking action
-        start = time.time()
+        #start = time.time()
         vrep.simxPauseCommunication(self.clientID,True)     #temporarily halting the communication thread 
         self._set_all_joint_position(action_smas)
         self._set_all_light_state(action_lights)
         vrep.simxPauseCommunication(self.clientID,False)    #and evaluated at the same time
-        print("Action running time: {}".format(time.time()-start))
+        #print("Action running time: {}".format(time.time()-start))
         
         # observe
-        start = time.time()
+        #start = time.time()
         self._self_observe()
-        print("Observation running time: {}".format(time.time()-start))
+        #print("Observation running time: {}".format(time.time()-start))
         # caculate reward
         self._reward()
         
