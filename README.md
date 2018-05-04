@@ -9,7 +9,8 @@ Living Architecture System simulated environment with OpenAi Gym APIs
 Dependency: 
 1. `vrep.py`
 2. `vrepConst.py`
-3. `remoteApi.dylib`(Mac) or `remoteApi.dll`(Windows) or `remoteApi.so`(Linux) (depend on your OS) \br
+3. `remoteApi.dylib`(Mac) or `remoteApi.dll`(Windows) or `remoteApi.so`(Linux) (depend on your OS) 
+
 (Put these three files in the same folder with _LAS_Env_new.py_)
 
 ## Features
