@@ -40,8 +40,10 @@ class LivingArchitectureEnv(gym.Env):
         self._set_joint_op_mode = vrep.simx_opmode_oneshot
         self._set_light_op_mode = vrep.simx_opmode_oneshot
         
-        self._get_prox_op_mode = vrep.simx_opmode_oneshot
-        self._get_light_op_mode = vrep.simx_opmode_oneshot
+        self._get_prox_op_mode = vrep.simx_opmode_buffer
+        self._get_light_op_mode = vrep.simx_opmode_buffer
+        
+        
         
         vrep.simxStartSimulation(self.clientID, self._def_op_mode)
         
@@ -213,7 +215,7 @@ class LivingArchitectureEnv(gym.Env):
         proxStates = np.zeros(proxSensorNum)
         proxPosition = np.zeros([proxSensorNum, 3])
         for i in range(proxSensorNum):
-            code, proxStates[i], proxPosition[i,:], handle, snv = vrep.simxReadProximitySensor(self.clientID, self.proxSensorHandles[i], self._def_op_mode)
+            code, proxStates[i], proxPosition[i,:], handle, snv = vrep.simxReadProximitySensor(self.clientID, self.proxSensorHandles[i], self._get_prox_op_mode)
         return proxStates, proxPosition
     
     def _get_all_light_data(self):
@@ -246,13 +248,14 @@ class LivingArchitectureEnv(gym.Env):
         # inner function end
         
         for i in range(lightNum):
-           lightStates[i], lightDiffsePart[i,:], lightSpecularPart[i,:] = _get_light_state_and_color(self.clientID, str(self.lightNames[i]), self.lightHandles[i], self._def_op_mode)
+           lightStates[i], lightDiffsePart[i,:], lightSpecularPart[i,:] = _get_light_state_and_color(self.clientID, str(self.lightNames[i]), self.lightHandles[i], self._get_light_op_mode)
         
         return lightStates, lightDiffsePart, lightSpecularPart
 
     def reset(self):
         #vrep.simxStopSimulation(self.clientID, self._def_op_mode)
         vrep.simxStartSimulation(self.clientID, self._def_op_mode)
+        
         self._self_observe()
         return self.observation
         
