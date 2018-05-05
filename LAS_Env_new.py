@@ -266,7 +266,7 @@ class LivingArchitectureEnv(gym.Env):
 
 if __name__ == '__main__':
     env = LivingArchitectureEnv()
-    env.reset()
+    observation = env.reset()
     # trival agent
     i = 1
     while True:
