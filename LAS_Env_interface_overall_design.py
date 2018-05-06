@@ -119,7 +119,10 @@ class Agent():
         #   Component: environment model
         self._environmentModel = self._create_environment_model()
         #   Component: intrinsic motivation model
+        #   _intrinsicMotivationModel: generate intrinsic reward
         self._intrinsicMotivationModel = self._create_intrinsic_motivation_model()
+        self._intrinsicallyMotivatedActorModel = self._create_intrinsically_motivated_actor_model()
+        self._intrinsicallyMotivatedCriticModel = self.__create_intrinsically_motivated_critic_model()
         
     # ========================================================================= #
     #                       Components or Models Definitions                      #
@@ -148,6 +151,18 @@ class Agent():
             intrinsicMotivationModel.predict()
         """
         
+    def _create_intrinsically_motivated_actor_model(self):
+        """
+        Create intrinsically motivated actor model
+            action = intrinsicallyMotivatedAcotorModel.predic(observation)
+        """
+        
+    def _create_intrinsically_motivated_critic_model(self):
+        """
+        Create intrinsically motivated critic model
+            IntrinsicQValue = intrinsicallyMotivatedCriticModel.predict(observation)
+        """
+    
     # ========================================================================= #
     #                      perceive and remember experiences                    #
     # ========================================================================= #        
@@ -161,6 +176,7 @@ class Agent():
         self._done = done
         self._remember(self._observationOld, self._actionOld, self._observation_new, self._reward)
         
+        
         # decide new action
         self._actionNew = self._act()
         # 
@@ -168,12 +184,30 @@ class Agent():
         self._actionOld = self._actionNew
         return self._actionNew
         
-    def _remember(self, observationOld, action_Old, observationNew, reward):
+    def _remember(self, observationOld, actionOld, observationNew, reward):
         """
         Store (observationOld, action_Old, observationNew, reward)
         """
-        self._memory.append([observationOld, action_Old, observationNew, reward])
+        self._memory.append([observationOld, actionOld, observationNew, reward])
         #self._
+    
+    def _remember_suprise(self, observationOld, actionOld, observationNew):
+        """
+        
+        """
+        predictedObservationNew= self._environmentModel.predict(observationOld, actionOld)
+        suprise = self._suprise_measure(observationNew,predictedObservationNew)
+        
+        self._memory_suprise.append([observationOld, actionOld, 
+                                     predictedObservationNew, observationNew,
+                                     suprise])
+        
+    def _suprise_measure(self, observationNew, predictedObservationNew):
+        """
+        Measure suprise level based on prediction and actual perceived state
+        """
+        suprise = distance(observationNew - predictedObservationNew)
+        return suprise
     # ========================================================================= #
     #                               Train Agent                                 #
     # ========================================================================= #        
@@ -202,9 +236,20 @@ class Agent():
         """
         Train environment model
         """
-    def _train_intrinsic_motivation_model(self, samples):
+    def _train_intrinsic_motivation_model(self, supriseSamples):
         """
         Train intrinsic motivation model
+            intrinsicReward = self._intrinsicMotivationModel(observation, action)
+            Intrinsic motivation will not only depend on current sate, but also 
+            related to what action an agent take at current state.
+        """
+        #intrinsicReward = average_of_suprise_over_a_period()
+        #the average could be got from real experiences or from environment models
+        #at different time steps.
+    
+    def _train_intrinsiically_motivated_actor_model(self, supriseSamples):
+        """
+        
         """
     # ========================================================================= #
     #                              Decide New Action                            #
