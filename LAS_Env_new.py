@@ -257,7 +257,8 @@ class LivingArchitectureEnv(gym.Env):
         vrep.simxStartSimulation(self.clientID, self._def_op_mode)
         
         self._self_observe()
-        return self.observation
+        done = False
+        return self.observation, done
         
     def destroy(self):
         vrep.simxStopSimulation(self.clientID, self._def_op_mode)
@@ -266,10 +267,10 @@ class LivingArchitectureEnv(gym.Env):
 
 if __name__ == '__main__':
     env = LivingArchitectureEnv()
-    observation = env.reset()
+    observation, done = env.reset()
     # trival agent
     i = 1
-    while True:
+    while not done:
         # random actions
         smas = np.random.randn(39)
         lights = np.random.randint(2,size = 39)

@@ -82,7 +82,7 @@ class LivingArchitectureEnv():
         Output: reward
         """
         
-        return self.reward
+        return self._reward
     
     def reset(self):
         """
@@ -90,7 +90,10 @@ class LivingArchitectureEnv():
         """
         start_simulation()
         self._observation = self._self_observe()
-        return self._observation
+        self._reward = self._reward(self._observation)
+        done = False # whether simulation is done
+        info = []
+        return self._observation, self._reward, done, info
     
 """
 This is an overall design of agent
@@ -148,7 +151,7 @@ class Agent():
     # ========================================================================= #
     #                      perceive and remember experiences                    #
     # ========================================================================= #        
-    def perceive(self, observation, reward, done = False, info = []):
+    def perceive_act(self, observation, reward, done = False, info = []):
         """
         Perceive observation and reward from environment after an interaction
         Input: observation, reward, done, info
@@ -157,6 +160,13 @@ class Agent():
         self._reward = reward
         self._done = done
         self._remember(self._observationOld, self._actionOld, self._observation_new, self._reward)
+        
+        # decide new action
+        self._actionNew = self._act()
+        # 
+        self._observationOld = self._observationNew
+        self._actionOld = self._actionNew
+        return self._actionNew
         
     def _remember(self, observationOld, action_Old, observationNew, reward):
         """
@@ -199,5 +209,17 @@ class Agent():
     # ========================================================================= #
     #                              Decide New Action                            #
     # ========================================================================= #        
-    def act(self):
+    def _act(self):
+        """
+        Decide new action
+        """
+    
         
+        
+if __name__ == '__main__':
+    env = LivingArchitectureEnv()
+    agent = Agent()
+    observation, reward, done, info = env.reset()
+    while not done:
+        action = agent.perceive_act(observation, reward, done, info)
+        observation, reward, done, info = env.step(action)
