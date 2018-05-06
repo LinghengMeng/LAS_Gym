@@ -56,12 +56,12 @@ class LivingArchitectureEnv(gym.Env):
         self.smas_num = len(self.jointHandles)
         self.lights_num = len(self.lightHandles)
         self.sensors_dim = self.prox_sensor_num + self.lights_num
-        self.actuators_dim = self.smas_num + self.lights_num
+        self.actuators_dim = self.smas_num + self.lights_num * (1+3) # light state & color
         
-        self.obs_max = np.array([np.inf]*self.actuators_dim)
-        self.obs_min = - np.array([np.inf]*self.actuators_dim)
-        self.act_max = np.array([1.]*self.sensors_dim)
-        self.act_min = - np.array([1.]*self.sensors_dim)
+        self.act_max = np.array([np.inf]*self.actuators_dim)
+        self.act_min = - np.array([np.inf]*self.actuators_dim)
+        self.obs_max = np.array([1.]*self.sensors_dim)
+        self.obs_min = - np.array([1.]*self.sensors_dim)
         
         self.observation_space = spaces.Box(self.obs_min, self.obs_max)
         self.action_space = spaces.Box(self.act_min, self.act_max)
@@ -145,14 +145,14 @@ class LivingArchitectureEnv(gym.Env):
         action = np.clip(action, self.act_min, self.act_max)
         # split action for light and sma
         action_smas = action[:self.smas_num]
-        action_lights = action[self.smas_num:]
-        action_lights = action_lights.astype(int)
-        
+        action_lights_state = action[self.smas_num:self.smas_num+self.lights_num]
+        action_lights_state = action_lights_state.astype(int)
+        action_lights_color = action[self.smas_num+self.lights_num:]
         # taking action
         #start = time.time()
         vrep.simxPauseCommunication(self.clientID,True)     #temporarily halting the communication thread 
         self._set_all_joint_position(action_smas)
-        self._set_all_light_state(action_lights)
+        self._set_all_light_state(action_lights_state,action_lights_color)
         vrep.simxPauseCommunication(self.clientID,False)    #and evaluated at the same time
         #print("Action running time: {}".format(time.time()-start))
         
@@ -172,26 +172,26 @@ class LivingArchitectureEnv(gym.Env):
         for i in range(jointNum):
             vrep.simxSetJointTargetPosition(self.clientID, self.jointHandles[i], targetPosition[i], self._set_joint_op_mode)
         
-    def _set_all_light_state(self, targetState):
+    def _set_all_light_state(self, targetState, targetColor):
         lightNum = len(self.lightHandles)
         if len(targetState) != lightNum:
             print("len(targetState) != lightNum")
         
         # inner function: remote function call to set light state
-        def _set_light_state(clientID, name, handle, targetState, opMode):
+        def _set_light_state(clientID, name, handle, targetState, targetColor, opMode):
 
             emptyBuff = bytearray()
             res,retInts,retFloats,retStrings,retBuffer = vrep.simxCallScriptFunction(clientID,
                                                                            name,
                                                                            vrep.sim_scripttype_childscript,
                                                                            'setLightStateAndColor',
-                                                                           [handle, targetState],[],[],emptyBuff,
+                                                                           [handle, targetState],targetColor,[],emptyBuff,
                                                                            opMode)
             if res != vrep.simx_return_ok:
                 warnings.warn("Remote function call: setLightStateAndColor fail in Class AnyLight.")
         # inner function end
         for i in range(lightNum):
-           _set_light_state(self.clientID, str(self.lightNames[i]), self.lightHandles[i], targetState[i], self._set_light_op_mode)
+           _set_light_state(self.clientID, str(self.lightNames[i]), self.lightHandles[i], targetState[i], targetColor[i*3:(i+1)*3], self._set_light_op_mode)
 
     def _reward(self):
         """ calculate reward based on observation of prximity sensor"""
@@ -273,10 +273,11 @@ if __name__ == '__main__':
     while not done:
         # random actions
         smas = np.random.randn(39)
-        lights = np.random.randint(2,size = 39)
-        action = np.array([smas, lights])
-        action = action.flatten()
-        
+        #lights_state = np.random.randint(2,size = 39)
+        lights_state = np.ones(39)
+        lights_color = np.random.uniform(0,1,39*3)
+        action = np.concatenate((smas, lights_state, lights_color))
+
         observation, reward, done, info = env.step(action)
         print("Step: {}, reward: {}".format(i, reward))
         i = i+1
