@@ -281,6 +281,6 @@ if __name__ == '__main__':
         observation, reward, done, info = env.step(action)
         print("Step: {}, reward: {}".format(i, reward))
         i = i+1
-        #time.sleep(0.1)
+        time.sleep(0.1)
     
     env.destroy()
